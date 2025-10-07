@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, FlatList, TouchableOpacity, RefreshControl, Alert } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { apiGet } from '../utils/api';
 
 export default function AdminListScreen({ navigation }) {
@@ -9,16 +10,17 @@ export default function AdminListScreen({ navigation }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await apiGet('/api/tickets');
-      setTickets(data);
+      const data = await apiGet('/tickets');  // IMPORTANT: no /api
+      setTickets(Array.isArray(data) ? data : []);
     } catch (e) {
       console.error('load tickets failed', e);
+      Alert.alert('Error', e.message || 'Failed to load tickets');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   function Item({ item }) {
     return (
@@ -39,14 +41,8 @@ export default function AdminListScreen({ navigation }) {
         data={tickets}
         keyExtractor={t => String(t.id)}
         renderItem={Item}
-        refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={load} />
-        }
-        ListEmptyComponent={
-          <View style={{ padding: 20 }}>
-            <Text>No tickets yet</Text>
-          </View>
-        }
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={load} />}
+        ListEmptyComponent={<View style={{ padding: 20 }}><Text>No tickets yet</Text></View>}
       />
     </View>
   );

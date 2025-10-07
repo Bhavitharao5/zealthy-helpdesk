@@ -1,26 +1,29 @@
-// app/screens/utils/api.js
-export const API_BASE = 'https://zealthy-helpdesk-oas3.onrender.com';
+const API_BASE = process.env.EXPO_PUBLIC_API_BASE || 'http://localhost:8080';
+console.log('API_BASE =', API_BASE);
 
-export async function apiGet(path) {
-  const r = await fetch(`${API_BASE}${path}`);
-  if (!r.ok) throw new Error('Request failed');
-  return r.json();
+async function handle(res) {
+  let data = null;
+  try { data = await res.json(); } catch {}
+  if (!res.ok) {
+    const msg = (data && (data.error || data.message)) || `${res.status} ${res.statusText}`;
+    throw new Error(msg);
+  }
+  return data ?? {};
 }
-export async function apiPost(path, body) {
-  const r = await fetch(`${API_BASE}${path}`, {
+
+export const apiGet = (path) =>
+  fetch(`${API_BASE}${path}`, { method: 'GET' }).then(handle);
+
+export const apiPost = (path, body) =>
+  fetch(`${API_BASE}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
-  });
-  if (!r.ok) throw new Error('Request failed');
-  return r.json();
-}
-export async function apiPatch(path, body) {
-  const r = await fetch(`${API_BASE}${path}`, {
+  }).then(handle);
+
+export const apiPatch = (path, body) =>
+  fetch(`${API_BASE}${path}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
-  });
-  if (!r.ok) throw new Error('Request failed');
-  return r.json();
-}
+  }).then(handle);

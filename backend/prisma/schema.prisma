@@ -1,0 +1,37 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Status {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+}
+
+model Ticket {
+  id          String    @id @default(cuid())
+  name        String
+  email       String
+  subject     String?
+  description String
+  priority    String    @default("Medium")
+  location    String    @default("NYC")
+  status      Status    @default(NEW)
+  attachments Json?     // stores the images array [{name,type,data}]
+  createdAt   DateTime  @default(now())
+  messages    Message[]
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  body      String
+  fromAdmin Boolean  @default(false)
+  createdAt DateTime @default(now())
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketId  String
+}
